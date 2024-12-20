@@ -1,0 +1,627 @@
+package com.sample;
+
+import com.sample.Window;
+import com.sample.Window_result;
+
+global Window window;
+global Window_result window_result;
+
+
+
+declare Dialog
+    question: String
+    answers: String[]
+end
+
+
+declare Result
+    result: String
+end
+
+
+
+declare Answer
+    dialog: Dialog
+    dialogAnswer: String
+end
+
+
+//Initial rule
+rule "Init"
+    when
+    then
+        insert(new Dialog("Who's drinking it?", new String[]{"someone else", "personal use"}));
+        window = new Window();
+        window_result = new Window_result(); 
+        insert(window);
+        insert(window_result);
+end
+
+
+
+//Rule supporting questions and user's answers
+rule "Ask question"
+    when
+        a: Dialog()
+    then
+        String odp = window.askUser(a.getQuestion(), a.getAnswers());
+        Answer ans = new Answer(a, odp);
+        insert(ans);
+end
+
+
+//Rule to show result
+rule "Show result"
+    when
+        r: Result()
+    then
+        window_result.showMessage(r.getResult());
+end
+
+
+
+
+
+
+
+//SOMEONE ELSE
+
+
+rule "Someone Else"
+    when
+        Answer(d: dialog, d.getQuestion() == "Who's drinking it?" && getDialogAnswer() == "someone else")
+    then
+        Dialog dlg = new Dialog("Are you at a social gathering?", new String[]{"yes", "no"});
+        String ans =window.askUser(dlg.getQuestion(), dlg.getAnswers());
+        insert(new Answer(dlg, ans));
+end
+
+rule "Social Gathering Yes"
+    when
+        Answer(d: dialog, d.getQuestion() == "Are you at a social gathering?" && getDialogAnswer() == "yes")
+    then
+        Dialog dlg = new Dialog("Pick one", new String[]{"dinner party", "bachelor (ette) party", "get together", "art opening", "beach bbq"});
+        String ans =window.askUser(dlg.getQuestion(), dlg.getAnswers());
+        insert(new Answer(dlg, ans));
+end
+
+
+rule "Social Gathering No"
+    when
+        Answer(d: dialog, d.getQuestion() == "Are you at a social gathering?" && getDialogAnswer() == "no")
+    then
+        Dialog dlg = new Dialog("Are they a wine lover?", new String[]{"yes", "no"});
+        String ans =window.askUser(dlg.getQuestion(), dlg.getAnswers());
+        insert(new Answer(dlg, ans));
+end
+
+rule "Get together"
+    when
+        Answer(d: dialog, d.getQuestion() == "Pick one" && getDialogAnswer() == "get together")
+    then
+        Dialog dlg = new Dialog("Do you know them?", new String[]{"yes", "no"});
+        String ans =window.askUser(dlg.getQuestion(), dlg.getAnswers());
+        insert(new Answer(dlg, ans));
+end
+
+
+
+rule "Wine lover yes"
+    when
+        Answer(d: dialog, d.getQuestion() == "Are they a wine lover?" && getDialogAnswer() == "yes")
+    then
+        Dialog dlg = new Dialog("Do you really know them?", new String[]{"yes", "no"});
+        String ans =window.askUser(dlg.getQuestion(), dlg.getAnswers());
+        insert(new Answer(dlg, ans));
+end
+
+
+rule "Know them yes"
+    when
+        Answer(d: dialog, d.getQuestion() == "Do you know them?" && getDialogAnswer() == "yes")
+    then
+        Dialog dlg = new Dialog("Are they wine lovers?", new String[]{"yes", "no"});
+        String ans =window.askUser(dlg.getQuestion(), dlg.getAnswers());
+        insert(new Answer(dlg, ans));
+end
+
+
+
+rule "Wine lovers yes"
+    when
+        Answer(d: dialog, (d.getQuestion() == "Are they wine lovers?" && getDialogAnswer() == "yes")||(d.getQuestion() == "Do you really know them?" && getDialogAnswer() == "yes")) 
+    then
+        Dialog dlg = new Dialog("Are they your favorite people in the world?", new String[]{"yes", "no"});
+        String ans =window.askUser(dlg.getQuestion(), dlg.getAnswers());
+        insert(new Answer(dlg, ans));
+end
+
+
+
+rule "Dinner Party"
+    when
+        Answer(d: dialog, d.getQuestion() == "Pick one" && getDialogAnswer() == "dinner party")
+    then
+        Dialog dlg = new Dialog("Who is cooking?", new String[]{"me", "them"});
+        String ans =window.askUser(dlg.getQuestion(), dlg.getAnswers());
+        insert(new Answer(dlg, ans));
+end
+
+
+
+
+
+
+
+
+
+
+//PERSONAL USE
+
+
+rule "Personal Use"
+    when
+        Answer(d: dialog, d.getQuestion() == "Who's drinking it?" && getDialogAnswer() == "personal use")
+    then
+        Dialog dlg = new Dialog("Are you at home?", new String[]{"yes", "no"});
+        String ans =window.askUser(dlg.getQuestion(), dlg.getAnswers());
+        insert(new Answer(dlg, ans));
+end
+
+
+
+rule "At Home Yes"
+    when
+        Answer(d: dialog, d.getQuestion() == "Are you at home?" && getDialogAnswer() == "yes")
+    then
+        Dialog dlg = new Dialog("Alone?", new String[]{"yes", "no"});
+        String ans =window.askUser(dlg.getQuestion(), dlg.getAnswers());
+        insert(new Answer(dlg, ans));
+end
+
+rule "At Home Alone Yes"
+    when
+        Answer(d: dialog, d.getQuestion() == "Alone?" && getDialogAnswer() == "yes")
+    then
+        Dialog dlg = new Dialog("Recovering from work?", new String[]{"yes", "no"});
+        String ans =window.askUser(dlg.getQuestion(), dlg.getAnswers());
+        insert(new Answer(dlg, ans));
+end
+
+
+rule "At Home Alone No"
+    when
+        Answer(d: dialog, (d.getQuestion() == "Alone?" && getDialogAnswer() == "no")||(d.getQuestion() == "On the go. Pick one:" && getDialogAnswer() == "dinner"))
+    then
+        Dialog dlg = new Dialog("Is wine the main course?", new String[]{"yes", "no"});
+        String ans =window.askUser(dlg.getQuestion(), dlg.getAnswers());
+        insert(new Answer(dlg, ans));
+end
+
+
+
+rule "At Home No"
+    when
+        Answer(d: dialog, d.getQuestion() == "Are you at home?" && getDialogAnswer() == "no")
+    then
+        Dialog dlg = new Dialog("On the go. Pick one:", new String[]{"dinner", "camping", "restaurant", "special occasions", "drinking in public"});
+        String ans =window.askUser(dlg.getQuestion(), dlg.getAnswers());
+        insert(new Answer(dlg, ans));
+end
+
+
+rule "On the go Special occaasions"
+    when
+        Answer(d: dialog, d.getQuestion() == "On the go. Pick one:" && getDialogAnswer() == "special occasions")
+    then
+        Dialog dlg = new Dialog("What are you celebrating?", new String[]{"anniversary", "eloping", "birthday", "blind date", "new years"});
+        String ans =window.askUser(dlg.getQuestion(), dlg.getAnswers());
+        insert(new Answer(dlg, ans));
+end
+
+
+rule "On the go Special restaurant"
+    when
+        Answer(d: dialog, d.getQuestion() == "On the go. Pick one:" && getDialogAnswer() == "restaurant")
+    then
+        Dialog dlg = new Dialog("Fancy?", new String[]{"yes", "no"});
+        String ans =window.askUser(dlg.getQuestion(), dlg.getAnswers());
+        insert(new Answer(dlg, ans));
+end
+
+rule "Fancy no"
+    when
+        Answer(d: dialog, d.getQuestion() == "Fancy?" && getDialogAnswer() == "no")
+    then
+        Dialog dlg = new Dialog("Order from a window?", new String[]{"yes", "no"});
+        String ans =window.askUser(dlg.getQuestion(), dlg.getAnswers());
+        insert(new Answer(dlg, ans));
+end
+
+rule "Fancy yes"
+    when
+        Answer(d: dialog, d.getQuestion() == "Fancy?" && getDialogAnswer() == "yes")
+    then
+        Dialog dlg = new Dialog("Can you pronounce the menu?", new String[]{"yes", "no"});
+        String ans =window.askUser(dlg.getQuestion(), dlg.getAnswers());
+        insert(new Answer(dlg, ans));
+end
+
+
+rule "For my wine collection OR pronounce the menu yes"
+    when
+        Answer(d: dialog, (d.getQuestion() == "For my wine collection" && getDialogAnswer() == "yes") || (d.getQuestion() == "Can you pronounce the menu?" && getDialogAnswer() == "yes"))
+    then
+        Dialog dlg = new Dialog("New vs. old world", new String[]{"what?","old!","new"});
+        String ans =window.askUser(dlg.getQuestion(), dlg.getAnswers());
+        insert(new Answer(dlg, ans));
+end
+
+
+
+rule "Anniversary"
+    when
+        Answer(d: dialog, d.getQuestion() == "What are you celebrating?" && getDialogAnswer() == "anniversary")
+    then
+        Dialog dlg = new Dialog("Which anniversary?", new String[]{"1st", "2+"});
+        String ans =window.askUser(dlg.getQuestion(), dlg.getAnswers());
+        insert(new Answer(dlg, ans));
+end
+
+rule "Recovering from work no"
+    when
+        Answer(d: dialog, d.getQuestion() == "Recovering from work?" && getDialogAnswer() == "no")
+    then
+        Dialog dlg = new Dialog("Getting drunk?", new String[]{"yes", "no"});
+        String ans =window.askUser(dlg.getQuestion(), dlg.getAnswers());
+        insert(new Answer(dlg, ans));
+end
+
+
+rule "Getting drunk no"
+    when
+        Answer(d: dialog, d.getQuestion() == "Getting drunk?" && getDialogAnswer() == "no")
+    then
+        Dialog dlg = new Dialog("Feeling fancy?", new String[]{"oui", "no"});
+        String ans =window.askUser(dlg.getQuestion(), dlg.getAnswers());
+        insert(new Answer(dlg, ans));
+end
+
+rule "Feeling fancy no"
+    when
+        Answer(d: dialog, d.getQuestion() == "Feeling fancy?" && getDialogAnswer() == "no")
+    then
+        Dialog dlg = new Dialog("Daily drinking wine", new String[]{"yes", "no"});
+        String ans =window.askUser(dlg.getQuestion(), dlg.getAnswers());
+        insert(new Answer(dlg, ans));
+end
+
+
+rule "Daily drinking wine yes"
+    when
+        Answer(d: dialog, (d.getQuestion() == "Daily drinking wine" && getDialogAnswer() == "yes")||(d.getQuestion() == "Cooking w/ your wine?" && getDialogAnswer() == "no"))
+    then
+        Dialog dlg = new Dialog("Kool-aid man?", new String[]{"yes", "no"});
+        String ans =window.askUser(dlg.getQuestion(), dlg.getAnswers());
+        insert(new Answer(dlg, ans));
+end
+
+rule "Kool-aid man no"
+    when
+        Answer(d: dialog, d.getQuestion() == "Kool-aid man?" && getDialogAnswer() == "no")
+    then
+        Dialog dlg = new Dialog("Eat dirt as a child?", new String[]{"yum", "no"});
+        String ans =window.askUser(dlg.getQuestion(), dlg.getAnswers());
+        insert(new Answer(dlg, ans));
+end
+
+rule "Eat dirt as a child no"
+    when
+        Answer(d: dialog, d.getQuestion() == "Eat dirt as a child?" && getDialogAnswer() == "no")
+    then
+        Dialog dlg = new Dialog("Spray butter in your mouth", new String[]{"yep", "no!"});
+        String ans =window.askUser(dlg.getQuestion(), dlg.getAnswers());
+        insert(new Answer(dlg, ans));
+end
+
+rule "Daily drinking wine no"
+    when
+        Answer(d: dialog, d.getQuestion() == "Daily drinking wine" && getDialogAnswer() == "no")
+    then
+        Dialog dlg = new Dialog("For my wine collection", new String[]{"yes"});
+        String ans =window.askUser(dlg.getQuestion(), dlg.getAnswers());
+        insert(new Answer(dlg, ans));
+end
+
+rule "For my wine collection"
+    when
+        Answer(d: dialog, d.getQuestion() == "For my wine collection" && getDialogAnswer() == "yes")
+    then
+        Dialog dlg = new Dialog("New vs. old world", new String[]{"what?","old!","new"});
+        String ans =window.askUser(dlg.getQuestion(), dlg.getAnswers());
+        insert(new Answer(dlg, ans));
+end
+
+rule "New vs. old world new"
+    when
+        Answer(d: dialog, d.getQuestion() == "New vs. old world" && getDialogAnswer() == "new")
+    then
+        Dialog dlg = new Dialog("Are you into cults?", new String[]{"no","yes"});
+        String ans =window.askUser(dlg.getQuestion(), dlg.getAnswers());
+        insert(new Answer(dlg, ans));
+end
+
+
+rule "Is wine the main course no"
+    when
+        Answer(d: dialog, d.getQuestion() == "Is wine the main course?" && getDialogAnswer() == "no")
+    then
+        Dialog dlg = new Dialog("Dinner from a microwave?", new String[]{"no","yes"});
+        String ans =window.askUser(dlg.getQuestion(), dlg.getAnswers());
+        insert(new Answer(dlg, ans));
+end
+
+rule "Dinner from a microwave no"
+    when
+        Answer(d: dialog, d.getQuestion() == "Dinner from a microwave?" && getDialogAnswer() == "no")
+    then
+        Dialog dlg = new Dialog("Cooking w/ your wine?", new String[]{"no","yes"});
+        String ans =window.askUser(dlg.getQuestion(), dlg.getAnswers());
+        insert(new Answer(dlg, ans));
+end
+
+
+
+
+
+
+
+//RESULTS
+
+
+rule "Who is Cooking Me"
+    when
+        Answer(d: dialog, d.getQuestion() == "Who is cooking?" && getDialogAnswer() == "me")
+    then
+    	insert(new Result("They don't deserve wine. Get out of my flowchart."));
+end
+
+
+rule "Are they a wine lover no"
+    when
+        Answer(d: dialog, d.getQuestion() == "Are they a wine lover?" && getDialogAnswer() == "no")
+    then
+    	insert(new Result("They don't deserve wine. Get out of my flowchart."));
+end
+
+
+
+rule "Really know them no"
+    when
+        Answer(d: dialog, d.getQuestion() == "Do you really know them?" && getDialogAnswer() == "no")
+    then
+    	insert(new Result("They don't deserve wine. Get out of my flowchart."));  
+end
+
+       
+rule "Favourite people in the world no"
+    when
+        Answer(d: dialog, d.getQuestion() == "Are they your favorite people in the world?" && getDialogAnswer() == "no")
+    then
+    	insert(new Result("They don't deserve wine. Get out of my flowchart."));
+end
+       
+
+rule "Are they wine lovers no"
+    when
+        Answer(d: dialog, d.getQuestion() == "Are they wine lovers?" && getDialogAnswer() == "no")
+    then
+    	insert(new Result("They don't deserve wine. Get out of my flowchart."));
+end
+       
+
+
+rule "Pronounce the menu no"
+    when
+        Answer(d: dialog, d.getQuestion() == "Can you pronounce the menu?" && getDialogAnswer() == "no")
+    then
+    	
+    	insert(new Result("Ask for Cotes du Rhone"));
+end
+
+
+
+rule "Who is Cooking Them"
+    when
+        Answer(d: dialog, d.getQuestion() == "Who is cooking?" && getDialogAnswer() == "them")
+    then
+    	insert(new Result("Buy the biggest bottle with the words 'red blend'"));
+end
+
+rule "Art Opening"
+    when
+        Answer(d: dialog, d.getQuestion() == "Pick one" && getDialogAnswer() == "art opening")
+    then
+    	insert(new Result("They rarely have a sense of taste 2-buck chuck"));
+end
+
+
+rule "Beach BBQ"
+    when
+        Answer(d: dialog, d.getQuestion() == "Pick one" && getDialogAnswer() == "beach bbq")
+    then
+    	insert(new Result("Bought a nice bottle but it was confiscated. No glass on the beach."));
+end
+
+
+rule "Know Them No"
+    when
+        Answer(d: dialog, d.getQuestion() == "Do you know them?" && getDialogAnswer() == "no")
+    then
+    	insert(new Result("Bring a boring bootle & hope no one opens it."));
+end
+
+
+rule "Bachelor Party"
+    when
+        Answer(d: dialog, d.getQuestion() == "Pick one" && getDialogAnswer() == "bachelor (ette) party")
+    then
+    	insert(new Result("Leave your wine at home, bring whisky or vodka"));
+end
+
+rule "Favourite people in the world yes"
+    when
+        Answer(d: dialog, d.getQuestion() == "Are they your favorite people in the world?" && getDialogAnswer() == "yes")
+    then
+    	insert(new Result("Hedonistic joy ride - California Pinot Nior"));
+end
+
+
+rule "The main course yes"
+    when
+        Answer(d: dialog, d.getQuestion() == "Is wine the main course?" && getDialogAnswer() == "yes")
+    then
+    	insert(new Result("Go for something exotic - Sangiovese or Grenache"));
+end
+
+
+rule "On the go camping OR On the go drinking in public"
+    when
+        Answer(d: dialog, (d.getQuestion() == "On the go. Pick one:" && getDialogAnswer() == "camping")|| (d.getQuestion() == "On the go. Pick one:" && getDialogAnswer() == "drinking in public"))
+    then
+    	insert(new Result("No cork screw red - Single Serve Box Wine"));
+end
+
+
+rule "Celebrating eloping"
+    when
+        Answer(d: dialog, d.getQuestion() == "What are you celebrating?" && getDialogAnswer() == "eloping")
+    then
+    	insert(new Result("Something sweet - Reisling or Chenin Blanc"));
+end
+
+
+rule "Celebrating new years"
+    when
+        Answer(d: dialog, d.getQuestion() == "What are you celebrating?" && getDialogAnswer() == "new years")
+    then
+    	insert(new Result("Cheap bubbly - Spanish Cava"));
+end
+
+rule "Celebrating anniversary 1st"
+    when
+        Answer(d: dialog, d.getQuestion() == "Which anniversary?" && getDialogAnswer() == "1st")
+    then
+    	insert(new Result("Hedonistic joy ride - California Pinot Nior"));
+end
+
+rule "Celebrating anniversary 2+"
+    when
+        Answer(d: dialog, d.getQuestion() == "Which anniversary?" && getDialogAnswer() == "2+")
+    then
+    	insert(new Result("Complacency is a bitch - Merlot"));
+end
+
+
+rule "Order from a window yes"
+    when
+        Answer(d: dialog, d.getQuestion() == "Order from a window?" && getDialogAnswer() == "yes")
+    then
+        insert(new Result("Go budget, go bulk - 3 liter box wine"));
+end
+
+rule "Order from a window no"
+    when
+        Answer(d: dialog, d.getQuestion() == "Order from a window?" && getDialogAnswer() == "no")
+    then
+        insert(new Result("Drink a bottle of sun - California cabernet"));
+end
+
+rule "Dinner from a microwave yes"
+    when
+        Answer(d: dialog, d.getQuestion() == "Dinner from a microwave?" && getDialogAnswer() == "yes")
+    then
+        insert(new Result("Go budget, go bulk - 3 liter box wine"));
+end
+
+rule "Kool-aid man yes"
+    when
+        Answer(d: dialog, d.getQuestion() == "Kool-aid man?" && getDialogAnswer() == "yes")
+    then
+        insert(new Result("Fruit forward wine - Argentinian Malbec"));
+end
+
+rule "Getting drunk yes"
+    when
+        Answer(d: dialog, d.getQuestion() == "Getting drunk?" && getDialogAnswer() == "yes")
+    then
+        insert(new Result("Go for high octane - Zinfandel or Shiraz"));
+end
+
+rule "Eat dirt as a child yum"
+    when
+        Answer(d: dialog, d.getQuestion() == "Eat dirt as a child?" && getDialogAnswer() == "yum")
+    then
+        insert(new Result("Something earthy - Chinon or Bourgueil"));
+end
+
+rule "Spray butter in your mouth yep"
+    when
+        Answer(d: dialog, d.getQuestion() == "Spray butter in your mouth" && getDialogAnswer() == "yep")
+    then
+        insert(new Result("Please bring me my - Buttery Chardonnay"));
+end
+
+rule "Cooking w/ your wine yes"
+    when
+        Answer(d: dialog, d.getQuestion() == "Cooking w/ your wine?" && getDialogAnswer() == "yes")
+    then
+        insert(new Result("White & <$9 such as - Sauvignon Blanc"));
+end
+
+rule "New vs. old world old"
+    when
+        Answer(d: dialog, d.getQuestion() == "New vs. old world" && getDialogAnswer() == "old!")
+    then
+        insert(new Result("Why buy anything but - Bordeaux or Burgundy"));
+end
+
+rule "Are you into cults no"
+    when
+        Answer(d: dialog, d.getQuestion() == "Are you into cults?" && getDialogAnswer() == "no")
+    then
+        insert(new Result("Drink a bottle of sun - California cabernet"));
+end
+
+rule "Are you into cults yes"
+    when
+        Answer(d: dialog, d.getQuestion() == "Are you into cults?" && getDialogAnswer() == "yes")
+    then
+        insert(new Result("Cult classics - Sine Qua Non or Cayuse"));
+end
+
+rule "Recovering from work yes"
+    when
+        Answer(d: dialog, d.getQuestion() == "Recovering from work?" && getDialogAnswer() == "yes")
+    then
+        insert(new Result("Sniff your glass of Pinot Noir"));
+end
+
+rule "Feeling fancy oui"
+    when
+        Answer(d: dialog, d.getQuestion() == "Feeling fancy?" && getDialogAnswer() == "oui")
+    then
+        insert(new Result("Go for something exotic - Sangiovese or Grenache"));
+end
+
+rule "New vs. old world what?"
+    when
+        Answer(d: dialog, (d.getQuestion() == "New vs. old world" && getDialogAnswer() == "what?")|| (d.getQuestion() == "Spray butter in your mouth" && getDialogAnswer() == "no!"))
+    then
+insert(new Result("Thx for playin', now get out of my flowchart"));
+end
+
+
+
+
+
