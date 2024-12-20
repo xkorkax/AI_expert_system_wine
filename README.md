@@ -1,4 +1,4 @@
 # AI_expert_system_wine
 
-## Kornelia Balicka 155907
-## Iga Długosz 155944
+### Kornelia Balicka 155907
+### Iga Długosz 155944
